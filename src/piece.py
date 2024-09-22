@@ -16,8 +16,8 @@ class Piece:
     def set_texture(self, size=80):
         self.texture = os.path.join(f'../assets/images/imgs-{size}px/{self.colour}_{self.name}.png')
 
-    def add_moves(self, validMove):
-        self.validMoves.append(validMove)
+    def add_move(self, validMove):
+        self.validMoves.append(validMove)  # moves == validMoves
 
 
 class Pawn(Piece):
