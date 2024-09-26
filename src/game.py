@@ -2,6 +2,7 @@ import pygame
 from const import *
 from board import Board
 from dragger import Dragger
+from square import Square
 
 class Game:
     def __init__(self):

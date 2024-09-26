@@ -14,8 +14,8 @@ class Dragger:
         self.mouseX, self.mouseY = pos  # tuple
 
     def save_initial_position(self, pos): # XY co-ordinates
-        self.initialRow = pos[1]
-        self.initialCol = pos[0]
+        self.initialRow = pos[1] // SQSIZE
+        self.initialCol = pos[0] // SQSIZE
 
     def drag_piece(self, piece):
         self.piece = piece

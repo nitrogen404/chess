@@ -6,9 +6,23 @@ from moves import Move
 class Board:
     def __init__(self):
         self.cmdBoard = [[0, 0, 0, 0, 0, 0, 0, 0] for col in range(COLS)]
+        self.lastMove = None
         self._create()
         self._place_pieces('white')
         self._place_pieces('black')
+    
+    def moveonBoard(self, piece, move):
+            initialPos = move.initialPlace
+            finalPos = move.finalPlace
+            self.cmdBoard[initialPos.row][initialPos.col].piece = None
+            self.cmdBoard[finalPos.row][finalPos.col].piece = piece
+            piece.moved = True
+            piece.clearMoves()
+            self.lastMove = move
+
+    def valid_move(self, piece, argMove):
+        print("called valid move", piece.name, argMove)
+        return argMove in piece.validMoves
     
     def calcMoves(self, piece, row, col):
         def pawnMoves():

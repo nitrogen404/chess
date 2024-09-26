@@ -19,6 +19,9 @@ class Piece:
     def add_move(self, validMove):
         self.validMoves.append(validMove)  # moves == validMoves
 
+    def clearMoves(self):
+        self.validMoves = []
+
 
 class Pawn(Piece):
     def __init__(self, colour):
