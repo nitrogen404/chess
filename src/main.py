@@ -21,6 +21,7 @@ class Main:
 
         while True:
             game.show_bg(screen)
+            game.showLastMove(screen)
             game.show_moves(screen)
             game.render_pieces(screen)
             
@@ -35,18 +36,21 @@ class Main:
                     
                     if board.cmdBoard[clickedRow][clickedCol].has_piece():
                         piece = board.cmdBoard[clickedRow][clickedCol].piece
-                        board.calcMoves(piece, clickedRow, clickedCol)
-                        dragger.save_initial_position(event.pos)
-                        dragger.drag_piece(piece)
-                        
-                        game.show_bg(screen)
-                        game.show_moves(screen)
-                        game.render_pieces(screen)
+                        if piece.colour == game.nextTurn:
+                            board.calcMoves(piece, clickedRow, clickedCol, bool=True)
+                            dragger.save_initial_position(event.pos)
+                            dragger.drag_piece(piece)
+                            
+                            game.show_bg(screen)
+                            game.showLastMove(screen)
+                            game.show_moves(screen)
+                            game.render_pieces(screen)
                         
                 elif event.type == pygame.MOUSEMOTION:
                     if dragger.dragged:
                         dragger.update_mouse(event.pos)
                         game.show_bg(screen)
+                        game.showLastMove(screen)
                         game.show_moves(screen)
                         game.render_pieces(screen)
                         dragger.update_blit(screen)
@@ -64,8 +68,18 @@ class Main:
                             print("valid move!")
                             board.moveonBoard(dragger.piece, move)
                             game.show_bg(screen)
+                            game.showLastMove(screen)
                             game.render_pieces(screen)
+                            game.nextPlayerTurn()
+
                     dragger.undrag_piece()
+                
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        game.reset()
+                        game = self.game
+                        board = self.game.board
+                        dragger = self.game.dragger
 
                 elif event.type == pygame.QUIT:
                     pygame.quit()

@@ -2,6 +2,7 @@ from const import *
 from square import Square
 from piece import *
 from moves import Move
+import copy
 
 class Board:
     def __init__(self):
@@ -16,6 +17,16 @@ class Board:
             finalPos = move.finalPlace
             self.cmdBoard[initialPos.row][initialPos.col].piece = None
             self.cmdBoard[finalPos.row][finalPos.col].piece = piece
+            
+            if isinstance(piece, Pawn):
+                self.isPromotion(piece, finalPos)
+
+            if isinstance(piece, King):
+                if self.castling(initialPos, finalPos):
+                    diff = finalPos.col - initialPos.col
+                    rook = piece.leftRook if (diff < 0) else piece.rightRook
+                    self.moveonBoard(rook, rook.validMoves[-1])
+
             piece.moved = True
             piece.clearMoves()
             self.lastMove = move
@@ -24,7 +35,32 @@ class Board:
         print("called valid move", piece.name, argMove)
         return argMove in piece.validMoves
     
-    def calcMoves(self, piece, row, col):
+    def isPromotion(self, piece, finalPos):
+        if finalPos.row == 0 or finalPos.row == 7:
+            self.cmdBoard[finalPos.row][finalPos.col].piece = Queen(piece.colour)
+        
+    def castling(self, initialPos, finalPos):
+        return abs(initialPos.col - finalPos.col) == 2
+    
+    def inCheck(self, piece, move):
+        tempPiece = copy.deepcopy(piece)
+        tempBoard = copy.deepcopy(self)
+        tempBoard.moveonBoard(tempPiece, move)
+        
+        for row in range(ROWS):
+            for col in range(COLS):
+                if tempBoard.cmdBoard[row][col].hasRivalPiece(piece.colour):
+                    p = tempBoard.cmdBoard[row][col].piece
+                    tempBoard.calcMoves(p, row, col, bool=False)
+                    for m in p.validMoves:
+                        if isinstance(m.finalPlace.piece, King):
+                            print("returned true")
+                            return True
+        print("returned false")
+        return False
+
+
+    def calcMoves(self, piece, row, col, bool=True):
         def pawnMoves():
             steps = 1 if piece.moved else 2
             
@@ -37,7 +73,11 @@ class Board:
                         initialPos = Square(row, col)
                         finalPos = Square(possibleRowMove, col)
                         move = Move(initialPos, finalPos)
-                        piece.add_move(move)
+                        if bool:
+                            if not self.inCheck(piece, move):
+                                piece.add_move(move)
+                        else:
+                            piece.add_move(move)
                     else: break
                 else: break
             
@@ -48,9 +88,14 @@ class Board:
                 if Square.in_range(possibleRowMove, possibleColMove):
                     if self.cmdBoard[possibleRowMove][possibleColMove].hasRivalPiece(piece.colour):
                         initialPos = Square(row, col)
-                        finalPos = Square(possibleRowMove, possibleColMove)
+                        finalPiece = self.cmdBoard[possibleRowMove][possibleColMove].piece
+                        finalPos = Square(possibleRowMove, possibleColMove, finalPiece)
                         move = Move(initialPos, finalPos)
-                        piece.add_move(move) 
+                        if bool:
+                            if not self.inCheck(piece, move):
+                                piece.add_move(move) 
+                        else:
+                            piece.add_move(move) 
 
 
         def knightMoves():
@@ -71,9 +116,14 @@ class Board:
                 if Square.in_range(possiblemoveInRow, possiblemoveInCol):
                     if self.cmdBoard[possiblemoveInRow][possiblemoveInCol].isEmptyorRival(piece.colour):  # checks if we have a empty/rival piece square
                         initialPos = Square(row, col)
-                        finalPos = Square(possiblemoveInRow, possiblemoveInCol)
+                        finalPiece = self.cmdBoard[possiblemoveInRow][possiblemoveInCol].piece
+                        finalPos = Square(possiblemoveInRow, possiblemoveInCol, finalPiece)
                         move = Move(initialPos, finalPos)
-                        piece.add_move(move)
+                        if bool:
+                            if not self.inCheck(piece, move):
+                                piece.add_move(move)
+                        else:
+                            piece.add_move(move)
 
         
         def straightLineMoves(increments):
@@ -85,16 +135,26 @@ class Board:
                 while True:
                     if Square.in_range(possibleRowMove, possibleColMove):
                         initialPos = Square(row, col)
-                        finalPos = Square(possibleRowMove, possibleColMove)
+                        finalPiece = self.cmdBoard[possibleRowMove][possibleColMove].piece
+                        finalPos = Square(possibleRowMove, possibleColMove, finalPiece)
                         move = Move(initialPos, finalPos)
                         
                         if self.cmdBoard[possibleRowMove][possibleColMove].isEmpty():
-                            piece.add_move(move)
+                            if bool:
+                                if not self.inCheck(piece, move):
+                                    piece.add_move(move)
+                            else: 
+                                piece.add_move(move)
 
-                        if self.cmdBoard[possibleRowMove][possibleColMove].hasRivalPiece(piece.colour):
-                            piece.add_move(move)
+
+                        elif self.cmdBoard[possibleRowMove][possibleColMove].hasRivalPiece(piece.colour):
+                            if bool:
+                                if not self.inCheck(piece, move):
+                                    piece.add_move(move)
+                            else: 
+                                piece.add_move(move)
                             break
-                        if self.cmdBoard[possibleRowMove][possibleColMove].hasFriendPiece(piece.colour):
+                        elif self.cmdBoard[possibleRowMove][possibleColMove].hasFriendPiece(piece.colour):
                             break
                     else:
                         break
@@ -122,7 +182,49 @@ class Board:
                         finalPos = Square(possibleRowMove, possibleColMove)
                         move = Move(initialPos, finalPos)
                         piece.add_move(move)
-
+            
+            if not piece.moved:
+                leftRook = self.cmdBoard[row][0].piece
+                
+                if isinstance(leftRook, Rook):
+                    if not leftRook.moved:
+                        for c in range(1, 3):
+                            if self.cmdBoard[row][c].has_piece(): # cannot castle
+                                break
+                            if c == 2:
+                                piece.leftRook = leftRook
+                                # rook's move
+                                initialSquare = Square(row, 0)
+                                finalSquare = Square(row, 2)
+                                moveRook = Move(initialSquare, finalSquare)
+                                leftRook.add_move(moveRook)
+                                
+                                # king's move
+                                initialSquare = Square(row, col)
+                                finalSquare = Square(row, 1)
+                                moveKing = Move(initialSquare, finalSquare)
+                                piece.add_move(moveKing)
+                
+                
+                rightRook = self.cmdBoard[row][7].piece
+                if isinstance(rightRook, Rook): 
+                    if not rightRook.moved:
+                        for c in range(5, 7):
+                            if self.cmdBoard[row][c].has_piece(): # cannot castle
+                                break
+                            if c == 6:
+                                piece.rightRook = rightRook
+                                # rook's move
+                                initialSquare = Square(row, 7)
+                                finalSquare = Square(row, 4) # as per chess.com
+                                moveRook = Move(initialSquare, finalSquare)
+                                rightRook.add_move(moveRook)
+                                
+                                # king's move
+                                initialSquare = Square(row, col)
+                                finalSquare = Square(row, 5) # as per chess.com
+                                moveKing = Move(initialSquare, finalSquare)
+                                piece.add_move(moveKing)
         
         if isinstance(piece, Pawn): 
             pawnMoves()

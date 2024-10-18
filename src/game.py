@@ -6,6 +6,7 @@ from square import Square
 
 class Game:
     def __init__(self):
+        self.nextTurn = 'white'
         self.board = Board()
         self.dragger = Dragger()
 
@@ -42,3 +43,19 @@ class Game:
                 colour = "#C86464" if (move.finalPlace.row + move.finalPlace.col) % 2 == 0 else "#C84646"
                 rect = (move.finalPlace.col * SQSIZE, move.finalPlace.row * SQSIZE, SQSIZE, SQSIZE)
                 pygame.draw.rect(surface, colour, rect)
+    
+    def showLastMove(self, surface):
+        if self.board.lastMove:
+            initialPosition = self.board.lastMove.initialPlace
+            finalPostion = self.board.lastMove.finalPlace
+            
+            for pos in [initialPosition, finalPostion]:
+                colour = (244, 247, 116) if (pos.row + pos.col) % 2 == 0  else (172, 195, 51)
+                rect = (pos.col * SQSIZE, pos.row * SQSIZE, SQSIZE, SQSIZE)
+                pygame.draw.rect(surface, colour, rect)
+
+    def nextPlayerTurn(self):
+        self.nextTurn = 'white' if self.nextTurn == 'black' else 'black'
+    
+    def reset(self):
+        self.__init__()

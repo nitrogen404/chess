@@ -17,6 +17,7 @@ class Piece:
         self.texture = os.path.join(f'../assets/images/imgs-{size}px/{self.colour}_{self.name}.png')
 
     def add_move(self, validMove):
+        print(f'move added for {self.name}', validMove)
         self.validMoves.append(validMove)  # moves == validMoves
 
     def clearMoves(self):
@@ -46,4 +47,6 @@ class Queen(Piece):
 
 class King(Piece):
     def __init__(self, colour):
+        self.leftRook = None
+        self.rightRook = None
         super().__init__('king', colour, 100000.0)
