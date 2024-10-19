@@ -67,6 +67,7 @@ class Main:
                         if board.valid_move(dragger.piece, move):
                             print("valid move!")
                             board.moveonBoard(dragger.piece, move)
+                            board.set_true_enPassant(dragger.piece)
                             game.show_bg(screen)
                             game.showLastMove(screen)
                             game.render_pieces(screen)

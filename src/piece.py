@@ -27,6 +27,7 @@ class Piece:
 class Pawn(Piece):
     def __init__(self, colour):
         self.dir = -1 if colour == 'white' else 1
+        self.en_passant = False
         super().__init__('pawn', colour, 1.0)
 
 class Knight(Piece):
